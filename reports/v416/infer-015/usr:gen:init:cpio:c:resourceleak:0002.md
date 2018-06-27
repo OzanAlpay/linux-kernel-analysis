@@ -23,7 +23,7 @@ if (! (type = strtok(line, " \t"))) {
 **Resolved By:** --  
 
 ## Manuel Assesment ##
-**Classification:** POSITIVE  
+**Classification:** FALSE-POSITIVE  
 ### Rationale ###
 Since these two warnings are closely related with each other, I want to investigate both of them together.  
 ```C
@@ -96,5 +96,5 @@ if (ec == 0)
 
 exit(ec);
 ```
-After analyzing this loop, I can say that: programmer won't close the file, in either break or termination of loop cases.  
+However in any case, this function will execute ```exit(ec)``` command, and that command will close all opened streams.   
 
