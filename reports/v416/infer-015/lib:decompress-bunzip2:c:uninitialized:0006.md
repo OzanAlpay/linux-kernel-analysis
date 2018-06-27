@@ -45,7 +45,7 @@ In here  symTotal assigned to 0
 		}
 	}
 ```
-Depends on bunzip data value, symTotal's value may be increased, but at worst case it is still 0  
+Depends on bunzip data value, symTotal's value may be increase, but at worst case it is still 0  
 ```C
 	/* How many different Huffman coding groups does this block use? */
 	groupCount = get_bits(bd, 3);
@@ -114,9 +114,9 @@ Programmer assign a value to t in here.
 				/* Add one if second bit 1, else
 				 * subtract 1.  Avoids if/else */
 				t += (((k+1)&2)-1);
-```C
-	There may be an update to value of , but it depends.(if k<2 then there won't be any update)
 ```
+There may be an update to value of t, but it depends.(if k<2 then there won't be any update)
+```C
 			}
 			/* Correct for the initial -1, to get the
 			 * final symbol length */
@@ -168,6 +168,6 @@ static unsigned int INIT get_bits(struct bunzip_data *bd, char bits_wanted)
 }
 ```
 That function returns an ```unsigned int bits```. Programmer assigned ```bits``` value at the beginning of function. I can't find any dangerous part of code in that function, that may return an uninitialized value  
-So in my opinion in any case ```length[0]``` will be initialized, before ``` minLen = maxLen = length[0];``` line called.
+So in my opinion in any case ```length[0]``` will be initialized, before ``` minLen = maxLen = length[0];``` line called. However I am not sure about 
 
 
