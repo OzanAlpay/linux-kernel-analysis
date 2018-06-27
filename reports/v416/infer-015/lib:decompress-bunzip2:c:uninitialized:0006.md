@@ -18,6 +18,7 @@
 ## Manuel Assesment ##
 **Classification:** POSITIVE  
 ### Rationale ###
+Since it is a huge function, I will examine it part by part.
 ```C
 static int INIT get_next_block(struct bunzip_data *bd)
 {
@@ -29,37 +30,12 @@ static int INIT get_next_block(struct bunzip_data *bd)
 	unsigned char uc, *symToByte, *mtfSymbol, *selectors;
 	unsigned int *dbuf, origPtr;
 
-	dbuf = bd->dbuf;
-	dbufSize = bd->dbufSize;
-	selectors = bd->selectors;
-	byteCount = bd->byteCount;
-	symToByte = bd->symToByte;
-	mtfSymbol = bd->mtfSymbol;
+....
 
-	/* Read in header signature and CRC, then validate signature.
-	   (last block signature means CRC is for whole file, return now) */
-	i = get_bits(bd, 24);
-	j = get_bits(bd, 24);
-	bd->headerCRC = get_bits(bd, 32);
-	if ((i == 0x177245) && (j == 0x385090))
-		return RETVAL_LAST_BLOCK;
-	if ((i != 0x314159) || (j != 0x265359))
-		return RETVAL_NOT_BZIP_DATA;
-	/* We can add support for blockRandomised if anybody complains.
-	   There was some code for this in busybox 1.0.0-pre3, but nobody ever
-	   noticed that it didn't actually work. */
-	if (get_bits(bd, 1))
-		return RETVAL_OBSOLETE_INPUT;
-	origPtr = get_bits(bd, 24);
-	if (origPtr >= dbufSize)
-		return RETVAL_DATA_ERROR;
-	/* mapping table: if some byte values are never used (encoding things
-	   like ascii text), the compression code removes the gaps to have fewer
-	   symbols to deal with, and writes a sparse bitfield indicating which
-	   values were present.  We make a translation table to convert the
-	   symbols back to the corresponding bytes. */
-	t = get_bits(bd, 16);
 	symTotal = 0;
+```
+In here  symTotal assigned to 0  
+```C
 	for (i = 0; i < 16; i++) {
 		if (t&(1 << (15-i))) {
 			k = get_bits(bd, 16);
@@ -68,6 +44,9 @@ static int INIT get_next_block(struct bunzip_data *bd)
 					symToByte[symTotal++] = (16*i)+j;
 		}
 	}
+```
+Depends on bunzip data value, symTotal's value may be increased, but at worst case it is still 0  
+```C
 	/* How many different Huffman coding groups does this block use? */
 	groupCount = get_bits(bd, 3);
 	if (groupCount < 2 || groupCount > MAX_GROUPS)
@@ -97,6 +76,9 @@ static int INIT get_next_block(struct bunzip_data *bd)
 	   for symTotal literal symbols, plus two run symbols (RUNA,
 	   RUNB) */
 	symCount = symTotal+2;
+```
+In here programmer assigned symCount value to symTotal+2, so in worst case it is 2  
+```C
 	for (j = 0; j < groupCount; j++) {
 		unsigned char length[MAX_SYMBOLS], temp[MAX_HUFCODE_BITS+1];
 		int	minLen,	maxLen, pp;
@@ -110,7 +92,10 @@ static int INIT get_next_block(struct bunzip_data *bd)
 		   becomes negative, so an unsigned inequality catches
 		   it.) */
 		t = get_bits(bd, 5)-1;
-		for (i = 0; i < symCount; i++) {
+```
+Programmer assign a value to t in here.
+```C
+		for (i = 0; i < symCount; i++)  {
 			for (;;) {
 				if (((unsigned)t) > (MAX_HUFCODE_BITS-1))
 					return RETVAL_DATA_ERROR;
@@ -129,6 +114,9 @@ static int INIT get_next_block(struct bunzip_data *bd)
 				/* Add one if second bit 1, else
 				 * subtract 1.  Avoids if/else */
 				t += (((k+1)&2)-1);
+```C
+	There may be an update to value of , but it depends.(if k<2 then there won't be any update)
+```
 			}
 			/* Correct for the initial -1, to get the
 			 * final symbol length */
@@ -137,3 +125,49 @@ static int INIT get_next_block(struct bunzip_data *bd)
 		/* Find largest and smallest lengths in this group */
 		minLen = maxLen = length[0];
 ```
+In here, we know that symCount at least equal to 2. So in this case it will assign values to ```length[0] and length[1]```. So lets look at value of  ```t```. If it is not an uninitialized value, then this function is safe. To understand it better, we must check ```get_bits()``` function.
+```C
+/* Return the next nnn bits of input.  All reads from the compressed input
+   are done through this function.  All reads are big endian */
+static unsigned int INIT get_bits(struct bunzip_data *bd, char bits_wanted)
+{
+	unsigned int bits = 0;
+
+	/* If we need to get more data from the byte buffer, do so.
+	   (Loop getting one byte at a time to enforce endianness and avoid
+	   unaligned access.) */
+	while (bd->inbufBitCount < bits_wanted) {
+		/* If we need to read more data from file into byte buffer, do
+		   so */
+		if (bd->inbufPos == bd->inbufCount) {
+			if (bd->io_error)
+				return 0;
+			bd->inbufCount = bd->fill(bd->inbuf, BZIP2_IOBUF_SIZE);
+			if (bd->inbufCount <= 0) {
+				bd->io_error = RETVAL_UNEXPECTED_INPUT_EOF;
+				return 0;
+			}
+			bd->inbufPos = 0;
+		}
+		/* Avoid 32-bit overflow (dump bit buffer to top of output) */
+		if (bd->inbufBitCount >= 24) {
+			bits = bd->inbufBits&((1 << bd->inbufBitCount)-1);
+			bits_wanted -= bd->inbufBitCount;
+			bits <<= bits_wanted;
+			bd->inbufBitCount = 0;
+		}
+		/* Grab next 8 bits of input from buffer. */
+		bd->inbufBits = (bd->inbufBits << 8)|bd->inbuf[bd->inbufPos++];
+		bd->inbufBitCount += 8;
+	}
+	/* Calculate result */
+	bd->inbufBitCount -= bits_wanted;
+	bits |= (bd->inbufBits >> bd->inbufBitCount)&((1 << bits_wanted)-1);
+
+	return bits;
+}
+```
+That function returns an ```unsigned int bits```. Programmer assigned ```bits``` value at the beginning of function. I can't find any dangerous part of code in that function, that may return an uninitialized value  
+So in my opinion in any case ```length[0]``` will be initialized, before ``` minLen = maxLen = length[0];``` line called.
+
+
