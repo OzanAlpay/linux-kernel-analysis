@@ -14,9 +14,9 @@ return ret;
 **Introduced By:** TODO  
 **Reported Since:** TODO  
 **Resolved By:** --  
-
+**Similar-Case:** [FalsePositive-Uninitialized-loop-problem](https://github.com/OzanAlpay/linux-kernel-analysis/tree/infer-documentation/infer/MockCodes/infer-uninitialized-with-loop)  
 ## Manuel Assesment ##
-**Classification:** POSITIVE  
+**Classification:** FALSE-POSITIVE  
 ### Rationale ###
 ```C
 ...
@@ -69,4 +69,4 @@ return ret;
 }
 ```
 In the function above, there is an infinite loop, and without assigning a value to ```ret``` value , it cannot be broken.  
-In my opinion ```ret``` cannot be an uninitialized before returning  
+In my opinion ```ret``` cannot have an uninitialized before return.
