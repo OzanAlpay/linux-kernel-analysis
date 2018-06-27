@@ -14,9 +14,9 @@
 **Introduced By:** TODO  
 **Reported Since:** TODO  
 **Resolved By:** --  
-
+**Similar Case:** [FalsePositive-Uninitialized-loop-problem](https://github.com/OzanAlpay/linux-kernel-analysis/tree/infer-documentation/infer/MockCodes/infer-uninitialized-with-loop)  
 ## Manuel Assesment ##
-**Classification:** POSITIVE  
+**Classification:** False - Positive  
 ### Rationale ###
 Since it is a huge function, I will examine it part by part.
 ```C
@@ -168,6 +168,6 @@ static unsigned int INIT get_bits(struct bunzip_data *bd, char bits_wanted)
 }
 ```
 That function returns an ```unsigned int bits```. Programmer assigned ```bits``` value at the beginning of function. I can't find any dangerous part of code in that function, that may return an uninitialized value  
-So in my opinion in any case ```length[0]``` will be initialized, before ``` minLen = maxLen = length[0];``` line called. However I am not sure about 
+So in my opinion in any case ```length[0]``` will be initialized, before ``` minLen = maxLen = length[0];``` line called. In my opinion since it will assign a value to ```length[0]``` inside a loop, Infer creates a false-positive warning in this case.
 
 
