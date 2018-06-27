@@ -49,4 +49,4 @@ err_free:
 	kfree(data);
 }
 ```
-As infer stated, ```ret``` value is not used after ```ret = ntrig_version_string(&data[2], buf);```. No need to assign return value of ```ntrig_version_string``` function  
+As infer stated, ```ret``` value is not used after ```ret = ntrig_version_string(&data[2], buf);```. No need to assign return value of ```ntrig_version_string``` function  to ```ret```.
