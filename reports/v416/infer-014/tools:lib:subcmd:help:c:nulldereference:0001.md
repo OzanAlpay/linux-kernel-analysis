@@ -39,7 +39,7 @@ We can simply add an if line after malloc, and check if ent is null or not:
 void add_cmdname(struct cmdnames *cmds, const char *name, size_t len)
 {
 	struct cmdname *ent = malloc(sizeof(*ent) + len + 1);
-	if(!ent) return;
+	if(!ent) exit 1;
 	ent->len = len;
 	memcpy(ent->name, name, len);
 	ent->name[len] = 0;
