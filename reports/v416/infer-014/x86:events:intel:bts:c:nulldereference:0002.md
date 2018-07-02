@@ -52,7 +52,7 @@ void *perf_get_aux(struct perf_output_handle *handle)
 ```
 So that function is not a null-safe function. If ```bts->handle``` is pointing to an invalid memory address, then this function may fail.   
 To find out that, if it is possible, then we should look at ```this_cpu_ptr(&bts_ctx);``` line. In here ```bts_ctx``` is an global variable.  
-```this_cpu_ptr`` macro defined in  [include/linux/percpu-defs.h](https://elixir.bootlin.com/linux/v4.16/source/include/linux/percpu-defs.h) file, as three different instances, which selected according to kernel-configuration.  
+```this_cpu_ptr``` macro defined in  [include/linux/percpu-defs.h](https://elixir.bootlin.com/linux/v4.16/source/include/linux/percpu-defs.h) file, as three different instances, which selected according to kernel-configuration.  
 ```C
 #define raw_cpu_ptr(ptr)						\
 ({									\
