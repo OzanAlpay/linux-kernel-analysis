@@ -16,7 +16,7 @@ for (i = k; i < fobj->shared_max; ++i) {
 **Resolved By:** --  
 
 ## Manuel Assesment ##
-**Classification:** POSITIVE  
+**Classification:** False - Positive  
 ### Rationale ###
 ```C
 static void
@@ -82,5 +82,5 @@ done:
 }
 
 ```
-In this function, there is no assignment made to k, if function follows ```goto done``` path. So in the loop,```i``` value will be assigned to an uninitialize value.  
-Infer is right to raise a warning here.
+In this function, there is no assignment made to k, if function follows ```goto done``` path. However in this case, after the second ```if (!old)``` check, ```reservation_object_add_shared_replace``` will return immediately, without entering loop. So I think its a false-positive warning.
+
